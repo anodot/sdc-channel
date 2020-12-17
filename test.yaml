@@ -1,0 +1,13 @@
+name: test
+
+destination:
+  type: http
+  url: http://dummy_destination
+  auth:
+    type: basic
+    config:
+      login: admin
+      password: admin
+
+template:
+  name: test_template

@@ -1,0 +1,23 @@
+version: '3.1'
+
+services:
+  sc:
+    build: .
+    restart: always
+    container_name: sdc-channel
+    hostname: sc
+    depends_on:
+      - db
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+
+  db:
+    container_name: db
+    image: postgres:9.6.19
+    restart: always
+    environment:
+      POSTGRES_USER: sdc
+      POSTGRES_PASSWORD: sdc
+      POSTGRES_DB: sdc
+    volumes:
+      - /var/lib/postgresql/data
