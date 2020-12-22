@@ -4,12 +4,25 @@ services:
   sc:
     build: .
     restart: always
-    container_name: sdc-channel
+    container_name: sc
     hostname: sc
     depends_on:
+      - dc
       - db
     stdin_open: true # docker run -i
     tty: true        # docker run -t
+    volumes:
+      - .:/usr/src/app
+
+  dc:
+    build: containers/streamsets
+    container_name: dc
+    ports:
+      - "18630:18630"
+    restart: on-failure
+    volumes:
+      - sdc-data:/data
+      - ./containers/certs:/home/certs
 
   db:
     container_name: db
@@ -21,3 +34,14 @@ services:
       POSTGRES_DB: sdc
     volumes:
       - /var/lib/postgresql/data
+
+  dummy_destination:
+    build: containers/dummy_destination
+    container_name: dummy_destination
+    volumes:
+      - ./containers/dummy_destination:/app
+    ports:
+      - 8080:80
+
+volumes:
+  sdc-data:

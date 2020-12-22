@@ -1,2 +1,4 @@
 venv
 .idea
+__pycache__
+/containers/dummy_destination/output

@@ -2,11 +2,11 @@ name: test
 
 destination:
   type: http
-  url: http://dummy_destination
+  url: http://dummy_destination/alert
   auth:
     type: basic
     config:
-      login: admin
+      user: admin
       password: admin
 
 template:

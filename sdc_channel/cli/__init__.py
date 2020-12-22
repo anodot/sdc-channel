@@ -1,7 +1,8 @@
 import click
 
-from src.version import __version__, __build_time__
-from src.cli.app import sc_group
+from sdc_channel import init
+from sdc_channel.version import __version__, __build_time__
+from sdc_channel.cli.app import create
 
 
 @click.group(invoke_without_command=True)
@@ -13,7 +14,8 @@ def sc(version):
 
 
 def cli_entry_point():
+    init.init()
     sc()
 
 
-sc.add_command(sc_group)
+sc.add_command(create)
