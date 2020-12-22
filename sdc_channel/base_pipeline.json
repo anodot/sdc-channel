@@ -5,7 +5,7 @@
     "pipelineId" : "adsfd9d7674d-2546-49b3-93e6-3d9feb85b1e2",
     "title" : "adsf",
     "description" : "",
-    "uuid" : "48897d39-9662-4d77-b6fb-90f986848e93",
+    "uuid" : "14963608-646d-422d-b000-dac7ac416622",
     "configuration" : [ {
       "name" : "executionMode",
       "value" : "STANDALONE"
@@ -624,10 +624,10 @@
         "value" : "BATCH"
       }, {
         "name" : "initScript",
-        "value" : ""
+        "value" : "state['TEMPLATE'] = '%title%\\n\\n%message%';"
       }, {
         "name" : "script",
-        "value" : "global sdc\n\ntry:\n    sdc.importLock()\n    import sys\n    import os\n\n    sys.path.append(os.path.join(os.environ['SDC_DIST'], 'python-libs'))\n    import requests\nfinally:\n    sdc.importUnlock()\n\nfor record in sdc.records:\n    message = {\n      \"alert_type\": \"test_alert\",\n      \"message\": \"test message\"\n    }\n    new_record = sdc.createRecord('Anodot alert')\n    new_record.value = message\n    try:\n        sdc.log.info(\"Output record: \" + str(new_record.value))\n        sdc.output.write(new_record)\n    except Exception as e:\n        sdc.error.write(new_record, str(e))"
+        "value" : "global sdc\n\ntry:\n    sdc.importLock()\n    import sys\n    import os\n\n    sys.path.append(os.path.join(os.environ['SDC_DIST'], 'python-libs'))\n    import requests\nfinally:\n    sdc.importUnlock()\n\nfor record in sdc.records:\n    text = state['TEMPLATE']\n    text = text.replace('%title%', \"test_alert\")\n    text = text.replace('%message%', \"test message\")\n    message = {\n      \"message\": text\n    }\n    new_record = sdc.createRecord('Anodot alert')\n    new_record.value = message\n    try:\n        sdc.log.info(\"Output record: \" + str(new_record.value))\n        sdc.output.write(new_record)\n    except Exception as e:\n        sdc.error.write(new_record, str(e))"
       }, {
         "name" : "destroyScript",
         "value" : ""
@@ -648,12 +648,12 @@
         "value" : [ ]
       } ],
       "uiInfo" : {
-        "yPos" : 194,
+        "yPos" : 196,
         "stageType" : "PROCESSOR",
         "icon" : "jython.png",
         "description" : "",
         "label" : "Jython Evaluator 1",
-        "xPos" : 840
+        "xPos" : 839
       },
       "inputLanes" : [ "HTTPServer_01OutputLane15995769211210" ],
       "outputLanes" : [ "JythonEvaluator_01OutputLane15995783438660" ],
@@ -992,19 +992,19 @@
       "pipelineId" : "test_template",
       "title" : "adsf",
       "description" : "",
-      "created" : 1608640122589,
-      "lastModified" : 1608640592344,
+      "created" : 1608645601806,
+      "lastModified" : 1608646047935,
       "creator" : "admin",
       "lastModifier" : "admin",
       "lastRev" : "0",
-      "uuid" : "48897d39-9662-4d77-b6fb-90f986848e93",
+      "uuid" : "14963608-646d-422d-b000-dac7ac416622",
       "valid" : true,
       "metadata" : {
         "labels" : [ ]
       },
       "name" : "test_template",
       "sdcVersion" : "3.15.0",
-      "sdcId" : "1ff8f14c-4451-11eb-8b04-5df8a33e1274"
+      "sdcId" : "eb00fdd4-445d-11eb-813c-030e2a7eecb2"
     },
     "metadata" : {
       "labels" : [ ]
@@ -1349,7 +1349,7 @@
       "condition" : "${value() > 100}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608640122676,
+      "timestamp" : 1608645601873,
       "valid" : true
     }, {
       "id" : "stageErrorAlertID",
@@ -1360,7 +1360,7 @@
       "condition" : "${value() > 100}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608640122676,
+      "timestamp" : 1608645601873,
       "valid" : true
     }, {
       "id" : "idleGaugeID",
@@ -1371,7 +1371,7 @@
       "condition" : "${time:now() - value() > 120000}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608640122676,
+      "timestamp" : 1608645601873,
       "valid" : true
     }, {
       "id" : "batchTimeAlertID",
@@ -1382,12 +1382,12 @@
       "condition" : "${value() > 200}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608640122676,
+      "timestamp" : 1608645601873,
       "valid" : true
     } ],
     "dataRuleDefinitions" : [ ],
     "driftRuleDefinitions" : [ ],
-    "uuid" : "1beef418-c899-4ca4-8ffc-fae9e4c5d43a",
+    "uuid" : "1edfd488-eb95-476d-9aca-8fc59965406b",
     "configuration" : [ {
       "name" : "emailIDs",
       "value" : [ ]
@@ -1395,8 +1395,8 @@
       "name" : "webhookConfigs",
       "value" : [ ]
     } ],
-    "configIssues" : [ ],
-    "ruleIssues" : [ ]
+    "ruleIssues" : [ ],
+    "configIssues" : [ ]
   },
   "libraryDefinitions" : null
 }

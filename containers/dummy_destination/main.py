@@ -12,8 +12,7 @@ def to_file():
     auth = request.authorization
     if auth.username != 'admin' or auth.password != 'admin':
         return jsonify('Authentication failed'), 401
-    file = request.get_json()['alert_type']
-    with open(os.path.join(OUTPUT_DIR, f'{file}.json'), 'a+') as f:
+    with open(os.path.join(OUTPUT_DIR, 'test.json'), 'a+') as f:
         json.dump(request.json, f)
         f.write('\n')
     return ''

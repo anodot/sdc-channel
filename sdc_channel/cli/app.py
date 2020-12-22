@@ -16,5 +16,7 @@ def create(file):
     except yaml.YAMLError as e:
         raise click.ClickException(str(e))
 
-    conf = config_handler.replace_destination_url(core.get_base_config(), config)
+    conf = core.get_base_config()
+    conf = config_handler.replace_destination_url(conf, config)
+
     sdc_client.create(Pipeline(config.template_name, conf))
