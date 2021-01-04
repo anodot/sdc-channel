@@ -2,12 +2,12 @@ name: test
 
 destination:
   type: zendesk
-  url: http://dummy_destination/alert
+  url: https://anodot.zendesk.com/api/v2/tickets.json
   auth:
     type: basic
     config:
-      user: admin
-      password: admin
+      user: # example@gmail.com/token
+      password: #token
 
 template:
   name: test_template

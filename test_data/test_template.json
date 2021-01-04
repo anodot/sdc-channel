@@ -1,0 +1,9 @@
+{
+  "ticket": {
+    "subject": "$subject",
+    "comment": {
+      "body": "$description"
+    },
+    "priority": "$priority"
+  }
+}

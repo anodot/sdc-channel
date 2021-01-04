@@ -2,10 +2,10 @@
   "pipelineConfig" : {
     "schemaVersion" : 6,
     "version" : 17,
-    "pipelineId" : "adsfd9d7674d-2546-49b3-93e6-3d9feb85b1e2",
-    "title" : "adsf",
+    "pipelineId" : "gfdsda4fc33a99-c2fb-4c23-ad3f-6b3ea925afe9",
+    "title" : "gfdsda",
     "description" : "",
-    "uuid" : "14963608-646d-422d-b000-dac7ac416622",
+    "uuid" : "51e10646-bec5-4d7e-946e-c5b01b364b76",
     "configuration" : [ {
       "name" : "executionMode",
       "value" : "STANDALONE"
@@ -603,7 +603,7 @@
         "value" : "TO_ERROR"
       } ],
       "uiInfo" : {
-        "yPos" : 193,
+        "yPos" : 192,
         "stageType" : "SOURCE",
         "icon" : "httpserver_multithreaded.png",
         "description" : "",
@@ -624,10 +624,55 @@
         "value" : "BATCH"
       }, {
         "name" : "initScript",
-        "value" : "state['TEMPLATE'] = '%title%\\n\\n%message%';"
+        "value" : ""
       }, {
         "name" : "script",
-        "value" : "global sdc\n\ntry:\n    sdc.importLock()\n    import sys\n    import os\n\n    sys.path.append(os.path.join(os.environ['SDC_DIST'], 'python-libs'))\n    import requests\nfinally:\n    sdc.importUnlock()\n\nfor record in sdc.records:\n    text = state['TEMPLATE']\n    text = text.replace('%title%', \"test_alert\")\n    text = text.replace('%message%', \"test message\")\n    message = {\n      \"message\": text\n    }\n    new_record = sdc.createRecord('Anodot alert')\n    new_record.value = message\n    try:\n        sdc.log.info(\"Output record: \" + str(new_record.value))\n        sdc.output.write(new_record)\n    except Exception as e:\n        sdc.error.write(new_record, str(e))"
+        "value" : "global sdc\n\nDROP = (\"what=\", \"#pipeline_id=\", \"#pipeline_type=\", \"#source=\", \"#source_host_id=\", \"#source_host_name=\")\nPRIORITIES = {\n    'info': 'low',\n    'low': 'low',\n    'medium': 'normal',\n    'high': 'high',\n    'critical': 'urgent',\n}\n\n\ndef common_dimensions(record):\n    common_dimensions = {}\n    for alert in record.value[\"alerts\"]:\n        for metric in alert[\"metrics\"]:\n            dimensions = filter(\n                lambda x: not x.startswith(DROP),\n                metric[\"name\"].split('.')\n            )\n            for dim in dimensions:\n                if dim not in common_dimensions:\n                    common_dimensions[dim] = 1\n                else:\n                    common_dimensions[dim] += 1\n    return [k for k, v in common_dimensions.iteritems() if v > 1]\n\n\ndef name(metric):\n    name = metric[\"name\"].split('.')[0].split('=')\n    return name[1] if len(name) == 2 else name[0]\n\n\ndef _is_up(metric):\n    return metric[\"direction\"] == \"UP\"\n\n\ndef direction_type(metric):\n    return \"Spike\" if _is_up(metric) else \"Drop\"\n\n\ndef percentage_delta(metric):\n    if _is_up(metric):\n        if \"upperPercentageDelta\" in metric:\n            return str(metric[\"upperPercentageDelta\"])\n    else:\n        if \"lowerPercentageDelta\" in metric:\n            return str(metric[\"lowerPercentageDelta\"])\n    return ''\n\n\ndef dimensions(metric, common_dims):\n    dims = filter(\n        lambda x: not x.startswith(DROP),\n        metric[\"name\"].split('.')\n    )\n    dims = filter(\n        lambda x: x not in common_dims,\n        dims\n    )\n    return filter(\n        lambda x: not str(x).isnumeric(),\n        dims\n    )\n\n\ndef state(alert):\n    for metric in alert[\"metrics\"]:\n        if metric[\"state\"] == \"OPEN\":\n            return \"Open\"\n    return \"Close\"\n\n\nfor record in sdc.records:\n    message = ''\n    subject = record.value['subject']\n    priority = PRIORITIES[record.value['severity']]\n\n    common_dims = common_dimensions(record)\n    if common_dims:\n        message += \"Common dimensions: \" + \", \".join(common_dims) + \"\\n\"\n    for alert in record.value[\"alerts\"]:\n        sdc.log.info(\"Input record: \" + str(record.value))\n        message += \"Alert \" + state(alert) + \": \" + alert[\"title\"] + \"\\n\"\n        if \"type\" in alert and alert[\"type\"]:\n            message += \"*Type:* \" + alert[\"type\"]\n        if \"description\" in alert and alert[\"description\"]:\n            message += alert[\"description\"] + \"\\n\"\n        message += \"___________________________\\n\"\n        for metric in alert[\"metrics\"]:\n            if \"direction\" in metric:\n                message += direction_type(metric) + \" in \" + name(metric) + \"\\n\"\n            if \"from\" in metric:\n                message += \"`\" + percentage_delta(metric) + \"` (from \" + str(\n                    metric[\"from\"]) + \" to \" + str(metric[\"to\"]) + \")\\n\"\n            if \"duration\" in metric and \"startTime\" in metric:\n                message += \"*Duration:* `\" + metric[\"duration\"] + \" (started \" + metric[\"startTime\"] + \")`\\n\"\n            message += \"*Dimensions:* `\" + \", \".join(dimensions(metric, common_dims)) + \"`\\n\"\n            message += \"___________________________\\n\"\n        for metric in alert[\"metrics\"]:\n            if \"imageUrl\" in metric and metric[\"imageUrl\"]:\n                message += metric[\"imageUrl\"] + \"\\n\"\n                break\n        if 'investigationUrl' in record.value and record.value['investigationUrl']:\n            message += record.value[\"investigationUrl\"] + \"\\n\"\n        if \"alertSettingsUrl\" in alert:\n            message += alert[\"alertSettingsUrl\"]\n\n    data = {\n        'variables': {\n            'subject': subject,\n            'description': message,\n            'priority': priority\n        }\n    }\n\n    new_record = sdc.createRecord('Anodot alert')\n    new_record.value = data\n    try:\n        sdc.log.info(\"Output record: \" + str(new_record.value))\n        sdc.output.write(new_record)\n    except Exception as e:\n        sdc.error.write(new_record, str(e))"
+      }, {
+        "name" : "destroyScript",
+        "value" : ""
+      }, {
+        "name" : "scriptRecordType",
+        "value" : "NATIVE_OBJECTS"
+      }, {
+        "name" : "userParams",
+        "value" : [ ]
+      }, {
+        "name" : "stageOnRecordError",
+        "value" : "TO_ERROR"
+      }, {
+        "name" : "stageRequiredFields",
+        "value" : [ ]
+      }, {
+        "name" : "stageRecordPreconditions",
+        "value" : [ ]
+      } ],
+      "uiInfo" : {
+        "yPos" : 195,
+        "stageType" : "PROCESSOR",
+        "icon" : "jython.png",
+        "description" : "",
+        "label" : "Parse alert",
+        "xPos" : 822
+      },
+      "inputLanes" : [ "HTTPServer_01OutputLane15995769211210" ],
+      "outputLanes" : [ "JythonEvaluator_01OutputLane15995783438660" ],
+      "eventLanes" : [ ],
+      "services" : [ ]
+    }, {
+      "instanceName" : "JythonEvaluator_02",
+      "library" : "streamsets-datacollector-jython_2_7-lib",
+      "stageName" : "com_streamsets_pipeline_stage_processor_jython_JythonDProcessor",
+      "stageVersion" : "3",
+      "configuration" : [ {
+        "name" : "processingMode",
+        "value" : "BATCH"
+      }, {
+        "name" : "initScript",
+        "value" : "state['TEMPLATE'] = '{\\n  \"ticket\": {\\n    \"subject\": \"$subject\",\\n    \"comment\": {\\n      \"body\": \"$description\"\\n    },\\n    \"priority\": \"$priority\"\\n  }\\n}\\n';"
+      }, {
+        "name" : "script",
+        "value" : "# You must supply a Content-Type: application/json header in PUT and POST requests\n# You must set an Accept: application/json header on all requests\n# todo state deprecated?\nglobal sdc, state\n\ntry:\n    sdc.importLock()\n    from string import Template\nfinally:\n    sdc.importUnlock()\n\n\nfor record in sdc.records:\n    ticket = Template(state['TEMPLATE']).safe_substitute(record['variables'])\n\n    new_record = sdc.createRecord('Anodot alert')\n    new_record.value = ticket\n    try:\n        sdc.log.info(\"Output record: \" + str(new_record.value))\n        sdc.output.write(new_record)\n    except Exception as e:\n        sdc.error.write(new_record, str(e))"
       }, {
         "name" : "destroyScript",
         "value" : ""
@@ -652,11 +697,11 @@
         "stageType" : "PROCESSOR",
         "icon" : "jython.png",
         "description" : "",
-        "label" : "Jython Evaluator 1",
-        "xPos" : 839
+        "label" : "Create message",
+        "xPos" : 1059
       },
-      "inputLanes" : [ "HTTPServer_01OutputLane15995769211210" ],
-      "outputLanes" : [ "JythonEvaluator_01OutputLane15995783438660" ],
+      "inputLanes" : [ "JythonEvaluator_01OutputLane15995783438660" ],
+      "outputLanes" : [ "JythonEvaluator_02OutputLane16091480493980" ],
       "eventLanes" : [ ],
       "services" : [ ]
     }, {
@@ -783,7 +828,13 @@
         "value" : "http://dummy_destination/alert"
       }, {
         "name" : "conf.headers",
-        "value" : [ ]
+        "value" : [ {
+          "key" : "Content-Type",
+          "value" : "application/json"
+        }, {
+          "key" : "Accept",
+          "value" : "application/json"
+        } ]
       }, {
         "name" : "conf.httpMethod",
         "value" : "POST"
@@ -957,14 +1008,14 @@
         "value" : [ ]
       } ],
       "uiInfo" : {
-        "yPos" : 194,
+        "yPos" : 196,
         "stageType" : "TARGET",
         "icon" : "httpclient.png",
         "description" : "",
         "label" : "Destination",
-        "xPos" : 1137
+        "xPos" : 1286
       },
-      "inputLanes" : [ "JythonEvaluator_01OutputLane15995783438660" ],
+      "inputLanes" : [ "JythonEvaluator_02OutputLane16091480493980" ],
       "outputLanes" : [ ],
       "eventLanes" : [ ],
       "services" : [ ]
@@ -990,21 +1041,21 @@
     },
     "info" : {
       "pipelineId" : "test_template",
-      "title" : "adsf",
+      "title" : "gfdsda",
       "description" : "",
-      "created" : 1608645601806,
-      "lastModified" : 1608646047935,
+      "created" : 1609765279533,
+      "lastModified" : 1609766036064,
       "creator" : "admin",
       "lastModifier" : "admin",
       "lastRev" : "0",
-      "uuid" : "14963608-646d-422d-b000-dac7ac416622",
+      "uuid" : "51e10646-bec5-4d7e-946e-c5b01b364b76",
       "valid" : true,
       "metadata" : {
         "labels" : [ ]
       },
       "name" : "test_template",
       "sdcVersion" : "3.15.0",
-      "sdcId" : "eb00fdd4-445d-11eb-813c-030e2a7eecb2"
+      "sdcId" : "bbf8f352-4e8a-11eb-a7b7-59dd8664a4b1"
     },
     "metadata" : {
       "labels" : [ ]
@@ -1349,7 +1400,7 @@
       "condition" : "${value() > 100}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608645601873,
+      "timestamp" : 1609765279536,
       "valid" : true
     }, {
       "id" : "stageErrorAlertID",
@@ -1360,7 +1411,7 @@
       "condition" : "${value() > 100}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608645601873,
+      "timestamp" : 1609765279536,
       "valid" : true
     }, {
       "id" : "idleGaugeID",
@@ -1371,7 +1422,7 @@
       "condition" : "${time:now() - value() > 120000}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608645601873,
+      "timestamp" : 1609765279536,
       "valid" : true
     }, {
       "id" : "batchTimeAlertID",
@@ -1382,12 +1433,12 @@
       "condition" : "${value() > 200}",
       "sendEmail" : false,
       "enabled" : false,
-      "timestamp" : 1608645601873,
+      "timestamp" : 1609765279536,
       "valid" : true
     } ],
     "dataRuleDefinitions" : [ ],
     "driftRuleDefinitions" : [ ],
-    "uuid" : "1edfd488-eb95-476d-9aca-8fc59965406b",
+    "uuid" : "ddd33abb-53ca-49c9-ba83-52b452855ae0",
     "configuration" : [ {
       "name" : "emailIDs",
       "value" : [ ]
