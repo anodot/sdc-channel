@@ -1,7 +1,7 @@
 import json
 import os
-from typing import Optional, List, Dict
 
+from typing import Optional, List, Dict
 from sdc_client import IStreamSets, IStreamSetsProvider, IPipeline, IPipelineProvider, ILogger
 
 
@@ -15,7 +15,7 @@ class Pipeline(IPipeline):
         return self.id
 
     def get_config(self) -> dict:
-        return self.config['pipelineConfig']
+        return self.config
 
     def get_offset(self) -> Optional[str]:
         pass
@@ -81,4 +81,4 @@ class Logger(ILogger):
 
 def get_base_config() -> dict:
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'base_pipeline.json')) as f:
-        return json.load(f)
+        return json.load(f)['pipelineConfig']

@@ -29,11 +29,13 @@ services:
     image: postgres:9.6.19
     restart: always
     environment:
-      POSTGRES_USER: sdc
-      POSTGRES_PASSWORD: sdc
-      POSTGRES_DB: sdc
+      POSTGRES_USER: channel
+      POSTGRES_PASSWORD: channel
+      POSTGRES_DB: sdc_channel
     volumes:
       - /var/lib/postgresql/data
+    ports:
+      - 55432:5432
 
   dummy_destination:
     build: containers/dummy_destination

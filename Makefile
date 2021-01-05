@@ -11,3 +11,6 @@ stop: clean-docker-volumes
 
 clean-docker-volumes:
 	docker-compose down -v
+
+alembic-migrate:
+	alembic upgrade head

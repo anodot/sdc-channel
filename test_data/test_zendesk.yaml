@@ -1,0 +1,14 @@
+name: test
+
+destination:
+  type: zendesk
+  url: https://anodot.zendesk.com/api/v2/tickets.json
+  auth:
+    type: basic
+    config:
+      user: # example@gmail.com/token
+      password: #token
+
+template:
+  name: test_template
+  path: /Users/antonzelenin/Workspace/sdc-channel/test_data/test_template.json

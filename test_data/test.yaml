@@ -1,7 +1,7 @@
 name: test
 
 destination:
-  type: http
+  type: zendesk
   url: http://dummy_destination/alert
   auth:
     type: basic
@@ -11,3 +11,4 @@ destination:
 
 template:
   name: test_template
+  path: /Users/antonzelenin/Workspace/sdc-channel/test_data/test_template.json
