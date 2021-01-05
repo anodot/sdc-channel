@@ -14,6 +14,7 @@ ZENDESK = 'zendesk'
 
 class ConfigParams:
     def __init__(self, config: dict):
+        self.name = config[NAME]
         self._init_template(config[TEMPLATE])
         self._init_destination(config[DESTINATION])
 

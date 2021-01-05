@@ -1,6 +1,6 @@
 import jsonschema
 
-schema = {
+zendesk_schema = {
     "type": "object",
     "properties": {
         "name": {"type": "string"},
@@ -37,4 +37,4 @@ schema = {
 
 
 def validate(config_: dict):
-    jsonschema.validate(config_, schema)
+    jsonschema.validate(config_, zendesk_schema)

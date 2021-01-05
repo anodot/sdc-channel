@@ -1,7 +1,7 @@
 import json
 import os
-from typing import Optional, List, Dict
 
+from typing import Optional, List, Dict
 from sdc_client import IStreamSets, IStreamSetsProvider, IPipeline, IPipelineProvider, ILogger
 
 

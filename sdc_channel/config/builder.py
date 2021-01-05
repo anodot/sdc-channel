@@ -4,10 +4,11 @@ from sdc_channel.config import ConfigParams
 from sdc_channel.constants import ROOT
 
 
-def build(base_config: dict, config_params: ConfigParams) -> dict:
+def build(base_config: dict, params: ConfigParams) -> dict:
     config = base_config.copy()
-    _replace_jython(config, config_params)
-    _replace_destination(config, config_params)
+    config['title'] = params.name
+    _replace_jython(config, params)
+    _replace_destination(config, params)
     return config
 
 
